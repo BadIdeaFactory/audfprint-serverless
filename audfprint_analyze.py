@@ -14,7 +14,7 @@ import os
 import struct  # For reading/writing hashes to file
 import time  # For glob2hashtable, localtester
 
-# import librosa
+import librosa
 import numpy as np
 import scipy.signal
 
@@ -250,60 +250,60 @@ class Analyzer(object):
             sthresh = a_dec * sthresh
         return peaks
 
-    # def find_peaks(self, d, sr):
-    #     """ Find the local peaks in the spectrogram as basis for fingerprints.
-    #         Returns a list of (time_frame, freq_bin) pairs.
-    #
-    #     :params:
-    #       d - np.array of float
-    #         Input waveform as 1D vector
-    #
-    #       sr - int
-    #         Sampling rate of d (not used)
-    #
-    #     :returns:
-    #       pklist - list of (int, int)
-    #         Ordered list of landmark peaks found in STFT.  First value of
-    #         each pair is the time index (in STFT frames, i.e., units of
-    #         n_hop/sr secs), second is the FFT bin (in units of sr/n_fft
-    #         Hz).
-    #     """
-    #     if len(d) == 0:
-    #         return []
-    #
-    #     # masking envelope decay constant
-    #     a_dec = (1 - 0.01 * (self.density * np.sqrt(self.n_hop / 352.8) / 35)) ** (1 / OVERSAMP)
-    #     # Take spectrogram
-    #     mywin = np.hanning(self.n_fft + 2)[1:-1]
-    #     sgram = np.abs(librosa.stft(d, n_fft=self.n_fft,
-    #                                 hop_length=self.n_hop,
-    #                                 window=mywin))
-    #     sgrammax = np.max(sgram)
-    #     if sgrammax > 0.0:
-    #         sgram = np.log(np.maximum(sgram, np.max(sgram) / 1e6))
-    #         sgram = sgram - np.mean(sgram)
-    #     else:
-    #         # The sgram is identically zero, i.e., the input signal was identically
-    #         # zero.  Not good, but let's let it through for now.
-    #         print("find_peaks: Warning: input signal is identically zero.")
-    #     # High-pass filter onset emphasis
-    #     # [:-1,] discards top bin (nyquist) of sgram so bins fit in 8 bits
-    #     sgram = np.array([scipy.signal.lfilter([1, -1],
-    #                                            [1, -HPF_POLE ** (1 / OVERSAMP)], s_row)
-    #                       for s_row in sgram])[:-1, ]
-    #     # Prune to keep only local maxima in spectrum that appear above an online,
-    #     # decaying threshold
-    #     peaks = self._decaying_threshold_fwd_prune(sgram, a_dec)
-    #     # Further prune these peaks working backwards in time, to remove small peaks
-    #     # that are closely followed by a large peak
-    #     peaks = self._decaying_threshold_bwd_prune_peaks(sgram, peaks, a_dec)
-    #     # build a list of peaks we ended up with
-    #     scols = np.shape(sgram)[1]
-    #     pklist = []
-    #     for col in xrange(scols):
-    #         for bin_ in np.nonzero(peaks[:, col])[0]:
-    #             pklist.append((col, bin_))
-    #     return pklist
+    def find_peaks(self, d, sr):
+        """ Find the local peaks in the spectrogram as basis for fingerprints.
+            Returns a list of (time_frame, freq_bin) pairs.
+
+        :params:
+          d - np.array of float
+            Input waveform as 1D vector
+
+          sr - int
+            Sampling rate of d (not used)
+
+        :returns:
+          pklist - list of (int, int)
+            Ordered list of landmark peaks found in STFT.  First value of
+            each pair is the time index (in STFT frames, i.e., units of
+            n_hop/sr secs), second is the FFT bin (in units of sr/n_fft
+            Hz).
+        """
+        if len(d) == 0:
+            return []
+
+        # masking envelope decay constant
+        a_dec = (1 - 0.01 * (self.density * np.sqrt(self.n_hop / 352.8) / 35)) ** (1 / OVERSAMP)
+        # Take spectrogram
+        mywin = np.hanning(self.n_fft + 2)[1:-1]
+        sgram = np.abs(librosa.stft(d, n_fft=self.n_fft,
+                                    hop_length=self.n_hop,
+                                    window=mywin))
+        sgrammax = np.max(sgram)
+        if sgrammax > 0.0:
+            sgram = np.log(np.maximum(sgram, np.max(sgram) / 1e6))
+            sgram = sgram - np.mean(sgram)
+        else:
+            # The sgram is identically zero, i.e., the input signal was identically
+            # zero.  Not good, but let's let it through for now.
+            print("find_peaks: Warning: input signal is identically zero.")
+        # High-pass filter onset emphasis
+        # [:-1,] discards top bin (nyquist) of sgram so bins fit in 8 bits
+        sgram = np.array([scipy.signal.lfilter([1, -1],
+                                               [1, -HPF_POLE ** (1 / OVERSAMP)], s_row)
+                          for s_row in sgram])[:-1, ]
+        # Prune to keep only local maxima in spectrum that appear above an online,
+        # decaying threshold
+        peaks = self._decaying_threshold_fwd_prune(sgram, a_dec)
+        # Further prune these peaks working backwards in time, to remove small peaks
+        # that are closely followed by a large peak
+        peaks = self._decaying_threshold_bwd_prune_peaks(sgram, peaks, a_dec)
+        # build a list of peaks we ended up with
+        scols = np.shape(sgram)[1]
+        pklist = []
+        for col in xrange(scols):
+            for bin_ in np.nonzero(peaks[:, col])[0]:
+                pklist.append((col, bin_))
+        return pklist
 
     def peaks2landmarks(self, pklist):
         """ Take a list of local peaks in spectrogram
@@ -340,86 +340,86 @@ class Analyzer(object):
 
         return landmarks
 
-    # def wavfile2peaks(self, filename, shifts=None):
-    #     """ Read a soundfile and return its landmark peaks as a
-    #         list of (time, bin) pairs.  If specified, resample to sr first.
-    #         shifts > 1 causes hashes to be extracted from multiple shifts of
-    #         waveform, to reduce frame effects.  """
-    #     ext = os.path.splitext(filename)[1]
-    #     if ext == PRECOMPPKEXT:
-    #         # short-circuit - precomputed fingerprint file
-    #         peaks = peaks_load(filename)
-    #         dur = np.max(peaks, axis=0)[0] * self.n_hop / self.target_sr
-    #     else:
-    #         try:
-    #             # [d, sr] = librosa.load(filename, sr=self.target_sr)
-    #             d, sr = audio_read.audio_read(filename, sr=self.target_sr, channels=1)
-    #         except Exception as e:  # audioread.NoBackendError:
-    #             message = "wavfile2peaks: Error reading " + filename
-    #             if self.fail_on_error:
-    #                 print(e)
-    #                 raise IOError(message)
-    #             print(message, "skipping")
-    #             d = []
-    #             sr = self.target_sr
-    #         # Store duration in a global because it's hard to handle
-    #         dur = len(d) / sr
-    #         if shifts is None or shifts < 2:
-    #             peaks = self.find_peaks(d, sr)
-    #         else:
-    #             # Calculate hashes with optional part-frame shifts
-    #             peaklists = []
-    #             for shift in range(shifts):
-    #                 shiftsamps = int(shift / self.shifts * self.n_hop)
-    #                 peaklists.append(self.find_peaks(d[shiftsamps:], sr))
-    #             peaks = peaklists
-    #
-    #     # instrumentation to track total amount of sound processed
-    #     self.soundfiledur = dur
-    #     self.soundfiletotaldur += dur
-    #     self.soundfilecount += 1
-    #     return peaks
+    def wavfile2peaks(self, filename, shifts=None):
+        """ Read a soundfile and return its landmark peaks as a
+            list of (time, bin) pairs.  If specified, resample to sr first.
+            shifts > 1 causes hashes to be extracted from multiple shifts of
+            waveform, to reduce frame effects.  """
+        ext = os.path.splitext(filename)[1]
+        if ext == PRECOMPPKEXT:
+            # short-circuit - precomputed fingerprint file
+            peaks = peaks_load(filename)
+            dur = np.max(peaks, axis=0)[0] * self.n_hop / self.target_sr
+        else:
+            try:
+                # [d, sr] = librosa.load(filename, sr=self.target_sr)
+                d, sr = audio_read.audio_read(filename, sr=self.target_sr, channels=1)
+            except Exception as e:  # audioread.NoBackendError:
+                message = "wavfile2peaks: Error reading " + filename
+                if self.fail_on_error:
+                    print(e)
+                    raise IOError(message)
+                print(message, "skipping")
+                d = []
+                sr = self.target_sr
+            # Store duration in a global because it's hard to handle
+            dur = len(d) / sr
+            if shifts is None or shifts < 2:
+                peaks = self.find_peaks(d, sr)
+            else:
+                # Calculate hashes with optional part-frame shifts
+                peaklists = []
+                for shift in range(shifts):
+                    shiftsamps = int(shift / self.shifts * self.n_hop)
+                    peaklists.append(self.find_peaks(d[shiftsamps:], sr))
+                peaks = peaklists
+
+        # instrumentation to track total amount of sound processed
+        self.soundfiledur = dur
+        self.soundfiletotaldur += dur
+        self.soundfilecount += 1
+        return peaks
 
     def wavfile2hashes(self, filename):
         """ Read a soundfile and return its fingerprint hashes as a
             list of (time, hash) pairs.  If specified, resample to sr first.
             shifts > 1 causes hashes to be extracted from multiple shifts of
             waveform, to reduce frame effects.  """
-        # ext = os.path.splitext(filename)[1]
-        # if ext == PRECOMPEXT:
-        # short-circuit - precomputed fingerprint file
-        hashes = hashes_load(filename)
-        dur = np.max(hashes, axis=0)[0] * self.n_hop / self.target_sr
-        # instrumentation to track total amount of sound processed
-        self.soundfiledur = dur
-        self.soundfiletotaldur += dur
-        self.soundfilecount += 1
-        # else:
-        #     peaks = self.wavfile2peaks(filename, self.shifts)
-        #     if len(peaks) == 0:
-        #         return []
-        #     # Did we get returned a list of lists of peaks due to shift?
-        #     if isinstance(peaks[0], list):
-        #         peaklists = peaks
-        #         query_hashes = []
-        #         for peaklist in peaklists:
-        #             query_hashes.append(landmarks2hashes(
-        #                     self.peaks2landmarks(peaklist)))
-        #         query_hashes = np.concatenate(query_hashes)
-        #     else:
-        #         query_hashes = landmarks2hashes(self.peaks2landmarks(peaks))
-    
-        #     # Remove duplicates by merging each row into a single value.
-        #     hashes_hashes = (((query_hashes[:, 0].astype(np.uint64)) << 32)
-        #                      + query_hashes[:, 1].astype(np.uint64))
-        #     unique_hash_hash = np.sort(np.unique(hashes_hashes))
-        #     unique_hashes = np.hstack([
-        #         (unique_hash_hash >> 32)[:, np.newaxis],
-        #         (unique_hash_hash & ((1 << 32) - 1))[:, np.newaxis]
-        #     ]).astype(np.int32)
-        #     hashes = unique_hashes
-        #     # Or simply np.unique(query_hashes, axis=0) for numpy >= 1.13
-    
+        ext = os.path.splitext(filename)[1]
+        if ext == PRECOMPEXT:
+            # short-circuit - precomputed fingerprint file
+            hashes = hashes_load(filename)
+            dur = np.max(hashes, axis=0)[0] * self.n_hop / self.target_sr
+            # instrumentation to track total amount of sound processed
+            self.soundfiledur = dur
+            self.soundfiletotaldur += dur
+            self.soundfilecount += 1
+        else:
+            peaks = self.wavfile2peaks(filename, self.shifts)
+            if len(peaks) == 0:
+                return []
+            # Did we get returned a list of lists of peaks due to shift?
+            if isinstance(peaks[0], list):
+                peaklists = peaks
+                query_hashes = []
+                for peaklist in peaklists:
+                    query_hashes.append(landmarks2hashes(
+                            self.peaks2landmarks(peaklist)))
+                query_hashes = np.concatenate(query_hashes)
+            else:
+                query_hashes = landmarks2hashes(self.peaks2landmarks(peaks))
+
+            # Remove duplicates by merging each row into a single value.
+            hashes_hashes = (((query_hashes[:, 0].astype(np.uint64)) << 32)
+                             + query_hashes[:, 1].astype(np.uint64))
+            unique_hash_hash = np.sort(np.unique(hashes_hashes))
+            unique_hashes = np.hstack([
+                (unique_hash_hash >> 32)[:, np.newaxis],
+                (unique_hash_hash & ((1 << 32) - 1))[:, np.newaxis]
+            ]).astype(np.int32)
+            hashes = unique_hashes
+            # Or simply np.unique(query_hashes, axis=0) for numpy >= 1.13
+
         # print("wavfile2hashes: read", len(hashes), "hashes from", filename)
         return hashes
 
@@ -577,15 +577,15 @@ def glob2hashtable(pattern, density=20.0):
     return ht
 
 
-# def local_tester():
-#     test_fn = '/Users/dpwe/Downloads/carol11k.wav'
-#     test_ht = hash_table.HashTable()
-#     test_analyzer = Analyzer()
-#
-#     test_analyzer.ingest(test_ht, test_fn)
-#     test_ht.save('httest.pklz')
-#
-#
-# # Run the test function if called from the command line
-# if __name__ == "__main__":
-#     local_tester()
+def local_tester():
+    test_fn = '/Users/dpwe/Downloads/carol11k.wav'
+    test_ht = hash_table.HashTable()
+    test_analyzer = Analyzer()
+
+    test_analyzer.ingest(test_ht, test_fn)
+    test_ht.save('httest.pklz')
+
+
+# Run the test function if called from the command line
+if __name__ == "__main__":
+    local_tester()
