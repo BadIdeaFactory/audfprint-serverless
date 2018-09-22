@@ -1,0 +1,32 @@
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    zip: true
+    useDownloadCache: true
+    useStaticCache: true
+  simulate:
+      dist: dist
+      # services:
+
+service: audfprint
+
+provider:
+  name: aws
+  runtime: python3.6
+  timeout: 60
+
+package:
+  # individually: true
+  exclude:
+    - node_modules/**
+    - tests/**
+    - .git/**
+
+functions:
+  create:
+    handler: handler.create
+  match:
+    handler: handler.match
+
+plugins:
+  - serverless-python-requirements
