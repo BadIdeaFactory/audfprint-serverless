@@ -10,27 +10,28 @@ from __future__ import division, print_function
 import os
 import time
 
-import psutil
-import matplotlib.pyplot as plt
-import librosa
-import librosa.display
+# import psutil
+# import matplotlib.pyplot as plt
+# import librosa
+# import librosa.display
 import numpy as np
-import scipy.signal
+# import scipy.signal
 
 import audfprint_analyze  # for localtest and illustrate
 import audio_read
 
 
 def process_info():
-    rss = usrtime = 0
-    p = psutil.Process(os.getpid())
-    if os.name == 'nt':
-        rss = p.memory_info()[0]
-        usrtime = p.cpu_times()[0]
-    else:
-        rss = p.get_memory_info()[0]
-        usrtime = p.get_cpu_times()[0]
-    return rss, usrtime
+    return 0, 0
+    # rss = usrtime = 0
+    # p = psutil.Process(os.getpid())
+    # if os.name == 'nt':
+    #     rss = p.memory_info()[0]
+    #     usrtime = p.cpu_times()[0]
+    # else:
+    #     rss = p.get_memory_info()[0]
+    #     usrtime = p.get_cpu_times()[0]
+    # return rss, usrtime
 
 
 def log(message):
@@ -411,53 +412,53 @@ class Matcher(object):
                     self.illustrate_match(analyzer, ht, qry)
         return msgrslt
 
-    def illustrate_match(self, analyzer, ht, filename):
-        """ Show the query fingerprints and the matching ones
-            plotted over a spectrogram """
-        # Make the spectrogram
-        # d, sr = librosa.load(filename, sr=analyzer.target_sr)
-        d, sr = audio_read.audio_read(filename, sr=analyzer.target_sr, channels=1)
-        sgram = np.abs(librosa.stft(d, n_fft=analyzer.n_fft,
-                                    hop_length=analyzer.n_hop,
-                                    window=np.hanning(analyzer.n_fft + 2)[1:-1]))
-        sgram = 20.0 * np.log10(np.maximum(sgram, np.max(sgram) / 1e6))
-        sgram = sgram - np.mean(sgram)
-        # High-pass filter onset emphasis
-        # [:-1,] discards top bin (nyquist) of sgram so bins fit in 8 bits
-        # spectrogram enhancement
-        if self.illustrate_hpf:
-            HPF_POLE = 0.98
-            sgram = np.array([scipy.signal.lfilter([1, -1],
-                                                   [1, -HPF_POLE], s_row)
-                              for s_row in sgram])[:-1, ]
-        sgram = sgram - np.max(sgram)
-        librosa.display.specshow(sgram, sr=sr, hop_length=analyzer.n_hop,
-                                 y_axis='linear', x_axis='time',
-                                 cmap='gray_r', vmin=-80.0, vmax=0)
-        # Do the match?
-        q_hashes = analyzer.wavfile2hashes(filename)
-        # Run query, get back the hashes for match zero
-        results, matchhashes = self.match_hashes(ht, q_hashes, hashesfor=0)
-        if self.sort_by_time:
-            results = sorted(results, key=lambda x: -x[2])
-        # Convert the hashes to landmarks
-        lms = audfprint_analyze.hashes2landmarks(q_hashes)
-        mlms = audfprint_analyze.hashes2landmarks(matchhashes)
-        # Overplot on the spectrogram
-        plt.plot(np.array([[x[0], x[0] + x[3]] for x in lms]).T,
-                 np.array([[x[1], x[2]] for x in lms]).T,
-                 '.-g')
-        plt.plot(np.array([[x[0], x[0] + x[3]] for x in mlms]).T,
-                 np.array([[x[1], x[2]] for x in mlms]).T,
-                 '.-r')
-        # Add title
-        plt.title(filename + " : Matched as " + ht.names[results[0][0]]
-                  + (" with %d of %d hashes" % (len(matchhashes),
-                                                len(q_hashes))))
-        # Display
-        plt.show()
-        # Return
-        return results
+    # def illustrate_match(self, analyzer, ht, filename):
+    #     """ Show the query fingerprints and the matching ones
+    #         plotted over a spectrogram """
+    #     # Make the spectrogram
+    #     # d, sr = librosa.load(filename, sr=analyzer.target_sr)
+    #     d, sr = audio_read.audio_read(filename, sr=analyzer.target_sr, channels=1)
+    #     sgram = np.abs(librosa.stft(d, n_fft=analyzer.n_fft,
+    #                                 hop_length=analyzer.n_hop,
+    #                                 window=np.hanning(analyzer.n_fft + 2)[1:-1]))
+    #     sgram = 20.0 * np.log10(np.maximum(sgram, np.max(sgram) / 1e6))
+    #     sgram = sgram - np.mean(sgram)
+    #     # High-pass filter onset emphasis
+    #     # [:-1,] discards top bin (nyquist) of sgram so bins fit in 8 bits
+    #     # spectrogram enhancement
+    #     if self.illustrate_hpf:
+    #         HPF_POLE = 0.98
+    #         sgram = np.array([scipy.signal.lfilter([1, -1],
+    #                                                [1, -HPF_POLE], s_row)
+    #                           for s_row in sgram])[:-1, ]
+    #     sgram = sgram - np.max(sgram)
+    #     librosa.display.specshow(sgram, sr=sr, hop_length=analyzer.n_hop,
+    #                              y_axis='linear', x_axis='time',
+    #                              cmap='gray_r', vmin=-80.0, vmax=0)
+    #     # Do the match?
+    #     q_hashes = analyzer.wavfile2hashes(filename)
+    #     # Run query, get back the hashes for match zero
+    #     results, matchhashes = self.match_hashes(ht, q_hashes, hashesfor=0)
+    #     if self.sort_by_time:
+    #         results = sorted(results, key=lambda x: -x[2])
+    #     # Convert the hashes to landmarks
+    #     lms = audfprint_analyze.hashes2landmarks(q_hashes)
+    #     mlms = audfprint_analyze.hashes2landmarks(matchhashes)
+    #     # Overplot on the spectrogram
+    #     plt.plot(np.array([[x[0], x[0] + x[3]] for x in lms]).T,
+    #              np.array([[x[1], x[2]] for x in lms]).T,
+    #              '.-g')
+    #     plt.plot(np.array([[x[0], x[0] + x[3]] for x in mlms]).T,
+    #              np.array([[x[1], x[2]] for x in mlms]).T,
+    #              '.-r')
+    #     # Add title
+    #     plt.title(filename + " : Matched as " + ht.names[results[0][0]]
+    #               + (" with %d of %d hashes" % (len(matchhashes),
+    #                                             len(q_hashes))))
+    #     # Display
+    #     plt.show()
+    #     # Return
+    #     return results
 
 
 def localtest():
