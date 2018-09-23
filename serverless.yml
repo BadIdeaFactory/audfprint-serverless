@@ -2,11 +2,6 @@ custom:
   pythonRequirements:
     dockerizePip: true
     zip: true
-    useDownloadCache: true
-    useStaticCache: true
-  simulate:
-      dist: dist
-      # services:
 
 service: audfprint
 
@@ -18,9 +13,20 @@ provider:
 package:
   # individually: true
   exclude:
+    - __pycache__/**
     - node_modules/**
     - tests/**
     - .git/**
+    - '*.txt'
+    - README.md
+    - package.json
+    - yarn.lock
+    - Makefile
+    - audfprint.py
+    # - audio_read.py
+    - dpwe_builder.py
+    - dpwe_matcher.py
+    - comp_file_lines.py
 
 functions:
   create:

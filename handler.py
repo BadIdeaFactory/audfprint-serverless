@@ -1,7 +1,7 @@
 try:
-  import unzip_requirements
+    import unzip_requirements
 except ImportError:
-  pass
+    pass
 
 import sys
 import json
@@ -102,17 +102,3 @@ def match(event, context):
         "body": json.dumps(matches)
     }
     return response
-
-
-# def hello(event, context):
-#     body = {
-#         "message": "Go Serverless v1.0! Your function executed successfully!",
-#         "input": event
-#     }
-
-#     response = {
-#         "statusCode": 200,
-#         "body": json.dumps(body)
-#     }
-
-#     return response

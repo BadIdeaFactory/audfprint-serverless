@@ -80,3 +80,4 @@ var/
 node_modules
 .requirements.zip
 .sls-simulate-registry
+unzip_requirements.py
