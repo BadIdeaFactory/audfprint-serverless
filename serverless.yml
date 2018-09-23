@@ -23,7 +23,6 @@ package:
     - yarn.lock
     - Makefile
     - audfprint.py
-    # - audio_read.py
     - dpwe_builder.py
     - dpwe_matcher.py
     - comp_file_lines.py
