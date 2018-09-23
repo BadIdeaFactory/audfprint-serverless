@@ -1,6 +1,4 @@
-librosa
 numpy
-scipy
-docopt
-joblib
 psutil
+librosa
+scipy

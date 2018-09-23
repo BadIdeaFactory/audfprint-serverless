@@ -14,7 +14,12 @@ import os
 import struct  # For reading/writing hashes to file
 import time  # For glob2hashtable, localtester
 
-import librosa
+try:
+    import librosa
+except:
+    pass
+
+# import librosa
 import numpy as np
 import scipy.signal
 

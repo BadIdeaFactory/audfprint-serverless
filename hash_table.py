@@ -15,7 +15,7 @@ import os
 import random
 
 import numpy as np
-import scipy.io
+# import scipy.io
 
 try:
     import cPickle as pickle  # Py2
@@ -203,11 +203,12 @@ class HashTable(object):
 
     def load(self, name):
         """ Read either pklz or mat-format hash table file """
-        ext = os.path.splitext(name)[1]
-        if ext == '.mat':
-            self.load_matlab(name)
-        else:
-            self.load_pkl(name)
+        # ext = os.path.splitext(name)[1]
+        # if ext == '.mat':
+        #     self.load_matlab(name)
+        # else:
+        #     self.load_pkl(name)
+        self.load_pkl(name)
         nhashes = sum(self.counts)
         # Report the proportion of dropped hashes (overfull table)
         dropped = nhashes - sum(np.minimum(self.depth, self.counts))
@@ -250,44 +251,44 @@ class HashTable(object):
         self.dirty = False
         self.params = params
 
-    def load_matlab(self, name):
-        """ Read hash table from version saved by Matlab audfprint.
-        :params:
-          name : str
-            filename of .mat matlab fp dbase file
-        :side_effects:
-          Sets up attributes of self including
-          params : dict
-            dictionary of parameters from the Matlab file including
-              'mat_version' : float
-                version read from Matlab file (must be >= 0.90)
-              'hoptime' : float
-                hoptime read from Matlab file (must be 0.02322)
-              'targetsr' : float
-                target sampling rate from Matlab file (must be 11025)
-        """
-        mht = scipy.io.loadmat(name)
-        params = {}
-        params['mat_version'] = mht['HT_params'][0][0][-1][0][0]
-        assert params['mat_version'] >= 0.9
-        self.hashbits = _bitsfor(mht['HT_params'][0][0][0][0][0])
-        self.depth = mht['HT_params'][0][0][1][0][0]
-        self.maxtimebits = _bitsfor(mht['HT_params'][0][0][2][0][0])
-        params['hoptime'] = mht['HT_params'][0][0][3][0][0]
-        params['targetsr'] = mht['HT_params'][0][0][4][0][0]
-        params['nojenkins'] = mht['HT_params'][0][0][5][0][0]
-        # Python doesn't support the (pointless?) jenkins hashing
-        assert params['nojenkins']
-        self.table = mht['HashTable'].T
-        self.counts = mht['HashTableCounts'][0]
-        self.names = [str(val[0]) if len(val) > 0 else []
-                      for val in mht['HashTableNames'][0]]
-        self.hashesperid = np.array(mht['HashTableLengths'][0]).astype(np.uint32)
-        # Matlab uses 1-origin for the IDs in the hashes, but the Python code
-        # also skips using id_ 0, so that names[0] corresponds to id_ 1.
-        # Otherwise unmodified database
-        self.dirty = False
-        self.params = params
+    # def load_matlab(self, name):
+    #     """ Read hash table from version saved by Matlab audfprint.
+    #     :params:
+    #       name : str
+    #         filename of .mat matlab fp dbase file
+    #     :side_effects:
+    #       Sets up attributes of self including
+    #       params : dict
+    #         dictionary of parameters from the Matlab file including
+    #           'mat_version' : float
+    #             version read from Matlab file (must be >= 0.90)
+    #           'hoptime' : float
+    #             hoptime read from Matlab file (must be 0.02322)
+    #           'targetsr' : float
+    #             target sampling rate from Matlab file (must be 11025)
+    #     """
+    #     mht = scipy.io.loadmat(name)
+    #     params = {}
+    #     params['mat_version'] = mht['HT_params'][0][0][-1][0][0]
+    #     assert params['mat_version'] >= 0.9
+    #     self.hashbits = _bitsfor(mht['HT_params'][0][0][0][0][0])
+    #     self.depth = mht['HT_params'][0][0][1][0][0]
+    #     self.maxtimebits = _bitsfor(mht['HT_params'][0][0][2][0][0])
+    #     params['hoptime'] = mht['HT_params'][0][0][3][0][0]
+    #     params['targetsr'] = mht['HT_params'][0][0][4][0][0]
+    #     params['nojenkins'] = mht['HT_params'][0][0][5][0][0]
+    #     # Python doesn't support the (pointless?) jenkins hashing
+    #     assert params['nojenkins']
+    #     self.table = mht['HashTable'].T
+    #     self.counts = mht['HashTableCounts'][0]
+    #     self.names = [str(val[0]) if len(val) > 0 else []
+    #                   for val in mht['HashTableNames'][0]]
+    #     self.hashesperid = np.array(mht['HashTableLengths'][0]).astype(np.uint32)
+    #     # Matlab uses 1-origin for the IDs in the hashes, but the Python code
+    #     # also skips using id_ 0, so that names[0] corresponds to id_ 1.
+    #     # Otherwise unmodified database
+    #     self.dirty = False
+    #     self.params = params
 
     def totalhashes(self):
         """ Return the total count of hashes stored in the table """
